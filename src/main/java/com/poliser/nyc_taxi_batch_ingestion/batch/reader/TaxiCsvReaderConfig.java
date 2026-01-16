@@ -4,6 +4,8 @@ import com.poliser.nyc_taxi_batch_ingestion.domain.model.TaxiCsvRow;
 import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
 import org.springframework.batch.infrastructure.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.infrastructure.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.infrastructure.item.support.SynchronizedItemStreamReader;
+import org.springframework.batch.infrastructure.item.support.builder.SynchronizedItemStreamReaderBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,7 +21,7 @@ public class TaxiCsvReaderConfig {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Bean
-    public LineTrackingItemReader<TaxiCsvRow> taxiCsvReader(
+    public SynchronizedItemStreamReader<TaxiCsvRow> taxiCsvReader(
             @Value("${taxi.ingestion.source-file:data/yellow_tripdata.csv}") String sourceFile
     ) {
 
@@ -31,8 +33,11 @@ public class TaxiCsvReaderConfig {
         flatFileReader.setLinesToSkip(1);
         flatFileReader.setStrict(true);
 
-        return new LineTrackingItemReader<TaxiCsvRow>(flatFileReader);
+        var lineTrackingReader = new LineTrackingItemReader<TaxiCsvRow>(flatFileReader);
 
+        return new SynchronizedItemStreamReaderBuilder<TaxiCsvRow>()
+                .delegate(lineTrackingReader)
+                .build();
     }
 
     private DefaultLineMapper<TaxiCsvRow> lineMapper() {

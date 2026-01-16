@@ -2,52 +2,42 @@ package com.poliser.nyc_taxi_batch_ingestion.batch.reader;
 
 import com.poliser.nyc_taxi_batch_ingestion.domain.model.TaxiCsvRow;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
-import org.springframework.batch.infrastructure.item.ItemReader;
-import org.springframework.batch.infrastructure.item.ItemStream;
 import org.springframework.batch.infrastructure.item.ItemStreamException;
+import org.springframework.batch.infrastructure.item.ItemStreamReader;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Wrapper that reads TaxiCsvRow and adds line number to each record.
- * Implements ItemStream to properly handle lifecycle methods (open, update, close).
+ * Implements ItemStreamReader for thread-safe usage with SynchronizedItemStreamReader.
  */
-public class LineTrackingItemReader<T> implements ItemReader<TaxiCsvRow>, ItemStream {
+public class LineTrackingItemReader<T> implements ItemStreamReader<TaxiCsvRow> {
 
-    private final ItemReader<T> delegate;
+    private final ItemStreamReader<T> delegate;
     private final AtomicLong lineNumber = new AtomicLong(1);
 
-    public LineTrackingItemReader(ItemReader<T> delegate) {
+    public LineTrackingItemReader(ItemStreamReader<T> delegate) {
         this.delegate = delegate;
     }
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
-        // Reset line counter on each job execution
         lineNumber.set(1);
-
-        if (delegate instanceof ItemStream itemStream) {
-            itemStream.open(executionContext);
-        }
+        delegate.open(executionContext);
     }
 
     @Override
     public void update(ExecutionContext executionContext) throws ItemStreamException {
-        if (delegate instanceof ItemStream itemStream) {
-            itemStream.update(executionContext);
-        }
+        delegate.update(executionContext);
     }
 
     @Override
     public void close() throws ItemStreamException {
-        if (delegate instanceof ItemStream itemStream) {
-            itemStream.close();
-        }
+        delegate.close();
     }
 
     @Override
     public TaxiCsvRow read() throws Exception {
-        @SuppressWarnings("unchecked")
         TaxiCsvRow item = (TaxiCsvRow) delegate.read();
 
         // Return null when file ends - this signals end of reading

@@ -1,0 +1,495 @@
+{
+  "id": null,
+  "uid": "nyc-taxi-batch",
+  "title": "NYC Taxi – Spring Batch Ingestion",
+  "tags": ["spring-batch", "nyc-taxi"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Chunks Written",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_chunk_write_seconds_count{spring_batch_chunk_write_step_name=\"taxiTripIngestionStep\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 1000000, "color": "yellow" },
+              { "value": 5000000, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Total Records Read",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_item_read_seconds_count{spring_batch_item_read_step_name=\"taxiTripIngestionStep\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Records Processed",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_item_process_seconds_count{spring_batch_item_process_status=\"SUCCESS\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Failed Records",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_item_process_seconds_count{spring_batch_item_process_status=\"FAILURE\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 100, "color": "yellow" },
+              { "value": 1000, "color": "orange" },
+              { "value": 10000, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Job Duration",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_job_seconds_sum{spring_batch_job_name=\"taxiIngestionJob\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 300, "color": "yellow" },
+              { "value": 600, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 0, "y": 6, "w": 6, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Job Status",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_job_seconds_count{spring_batch_job_name=\"taxiIngestionJob\", spring_batch_job_status=\"COMPLETED\"}",
+          "legendFormat": "COMPLETED",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "NOT COMPLETED", "color": "red" } } },
+            { "type": "range", "options": { "from": 1, "to": 999999, "result": { "text": "COMPLETED", "color": "green" } } }
+          ]
+        }
+      },
+      "gridPos": { "x": 6, "y": 6, "w": 6, "h": 6 }
+    },
+    {
+      "type": "gauge",
+      "title": "CPU Usage (%)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "process_cpu_usage{application=\"nyc-taxi-batch\"} * 100",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 80, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 12, "y": 6, "w": 6, "h": 6 }
+    },
+    {
+      "type": "gauge",
+      "title": "Active Threads",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "executor_active_threads{name=\"batchTaskExecutor\"}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 8,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "blue" },
+              { "value": 4, "color": "green" },
+              { "value": 7, "color": "yellow" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 18, "y": 6, "w": 6, "h": 6 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Processing Rate (items/sec)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "rate(spring_batch_item_read_seconds_count{spring_batch_item_read_step_name=\"taxiTripIngestionStep\"}[1m])",
+          "legendFormat": "Read Rate",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(spring_batch_item_process_seconds_count{spring_batch_item_process_status=\"SUCCESS\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"}[1m])",
+          "legendFormat": "Process Rate",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(spring_batch_chunk_write_seconds_count{spring_batch_chunk_write_step_name=\"taxiTripIngestionStep\"}[1m]) * 1000",
+          "legendFormat": "Write Rate (chunks * 1000)",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      },
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cumulative Progress",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "spring_batch_item_read_seconds_count{spring_batch_item_read_step_name=\"taxiTripIngestionStep\"}",
+          "legendFormat": "Read",
+          "refId": "A"
+        },
+        {
+          "expr": "spring_batch_item_process_seconds_count{spring_batch_item_process_status=\"SUCCESS\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"}",
+          "legendFormat": "Processed",
+          "refId": "B"
+        },
+        {
+          "expr": "spring_batch_item_process_seconds_count{spring_batch_item_process_status=\"FAILURE\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"}",
+          "legendFormat": "Failed",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 10
+          }
+        }
+      },
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Thread Pool - Active Threads",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "executor_active_threads{name=\"batchTaskExecutor\"}",
+          "legendFormat": "Active Threads",
+          "refId": "A"
+        },
+        {
+          "expr": "executor_pool_size_threads{name=\"batchTaskExecutor\"}",
+          "legendFormat": "Pool Size",
+          "refId": "B"
+        },
+        {
+          "expr": "executor_pool_max_threads{name=\"batchTaskExecutor\"}",
+          "legendFormat": "Max Threads",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 20
+          }
+        }
+      },
+      "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "HikariCP - Connection Pool",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_active{pool=\"HikariPool-1\"}",
+          "legendFormat": "Active",
+          "refId": "A"
+        },
+        {
+          "expr": "hikaricp_connections_idle{pool=\"HikariPool-1\"}",
+          "legendFormat": "Idle",
+          "refId": "B"
+        },
+        {
+          "expr": "hikaricp_connections_pending{pool=\"HikariPool-1\"}",
+          "legendFormat": "Pending",
+          "refId": "C"
+        },
+        {
+          "expr": "hikaricp_connections_max{pool=\"HikariPool-1\"}",
+          "legendFormat": "Max",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "fillOpacity": 20
+          }
+        }
+      },
+      "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 }
+    },
+    {
+      "type": "stat",
+      "title": "Avg Chunk Write Time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "(spring_batch_chunk_write_seconds_sum{spring_batch_chunk_write_step_name=\"taxiTripIngestionStep\"} / spring_batch_chunk_write_seconds_count{spring_batch_chunk_write_step_name=\"taxiTripIngestionStep\"}) * 1000",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 50, "color": "yellow" },
+              { "value": 100, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 0, "y": 36, "w": 8, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Avg Item Read Time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "(spring_batch_item_read_seconds_sum{spring_batch_item_read_step_name=\"taxiTripIngestionStep\"} / spring_batch_item_read_seconds_count{spring_batch_item_read_step_name=\"taxiTripIngestionStep\"}) * 1000000",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "µs",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 10, "color": "yellow" },
+              { "value": 50, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 8, "y": 36, "w": 8, "h": 6 }
+    },
+    {
+      "type": "stat",
+      "title": "Avg Item Process Time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "(spring_batch_item_process_seconds_sum{spring_batch_item_process_status=\"SUCCESS\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"} / spring_batch_item_process_seconds_count{spring_batch_item_process_status=\"SUCCESS\", spring_batch_item_process_step_name=\"taxiTripIngestionStep\"}) * 1000000",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "µs",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green" },
+              { "value": 5, "color": "yellow" },
+              { "value": 20, "color": "red" }
+            ]
+          }
+        }
+      },
+      "gridPos": { "x": 16, "y": 36, "w": 8, "h": 6 }
+    }
+  ]
+}

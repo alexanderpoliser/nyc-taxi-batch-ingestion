@@ -1,7 +1,6 @@
 package com.poliser.nyc_taxi_batch_ingestion.batch.step;
 
 import com.poliser.nyc_taxi_batch_ingestion.batch.observability.StepMetricsListener;
-import com.poliser.nyc_taxi_batch_ingestion.batch.reader.LineTrackingItemReader;
 import com.poliser.nyc_taxi_batch_ingestion.domain.model.TaxiCsvRow;
 import com.poliser.nyc_taxi_batch_ingestion.domain.model.TaxiTripRaw;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -9,9 +8,11 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemStreamReader;
 import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
@@ -23,9 +24,10 @@ public class TaxiStepConfig {
     public Step taxiTripIngestionStep(
             JobRepository jobRepository,
             PlatformTransactionManager transactionManager,
-            LineTrackingItemReader<?> reader,
+            ItemStreamReader<TaxiCsvRow> reader,
             ItemProcessor<TaxiCsvRow, TaxiTripRaw> processor,
             JdbcBatchItemWriter<TaxiTripRaw> writer,
+            AsyncTaskExecutor batchTaskExecutor,
             MeterRegistry meterRegistry
     ) {
         return new StepBuilder("taxiTripIngestionStep", jobRepository)
@@ -34,6 +36,7 @@ public class TaxiStepConfig {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .taskExecutor(batchTaskExecutor)
                 .listener(new StepMetricsListener(meterRegistry))
                 .faultTolerant()
                 .skip(IllegalArgumentException.class)
