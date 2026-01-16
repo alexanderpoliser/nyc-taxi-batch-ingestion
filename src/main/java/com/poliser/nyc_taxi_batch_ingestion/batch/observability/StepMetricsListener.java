@@ -5,14 +5,14 @@ import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.ExitStatus;
+
 import org.springframework.batch.core.listener.ChunkListener;
 import org.springframework.batch.core.listener.StepExecutionListener;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.StepExecution;
-
+import org.springframework.batch.infrastructure.item.Chunk;
 import java.time.Duration;
 
-public class StepMetricsListener implements StepExecutionListener, ChunkListener {
+public class StepMetricsListener implements StepExecutionListener, ChunkListener<Object, Object> {
 
     private static final Logger log =
             LoggerFactory.getLogger(StepMetricsListener.class);
@@ -24,6 +24,7 @@ public class StepMetricsListener implements StepExecutionListener, ChunkListener
     private long lastReadCount;
     private long lastWriteCount;
     private long lastProcessSkipCount;
+    private StepExecution currentStepExecution;
 
     public StepMetricsListener(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
@@ -36,6 +37,7 @@ public class StepMetricsListener implements StepExecutionListener, ChunkListener
         lastReadCount = 0;
         lastWriteCount = 0;
         lastProcessSkipCount = 0;
+        currentStepExecution = stepExecution;
 
         log.info("Step [{}] started", stepExecution.getStepName());
     }
@@ -77,46 +79,48 @@ public class StepMetricsListener implements StepExecutionListener, ChunkListener
     }
 
     @Override
-    public void beforeChunk(ChunkContext context) {
+    public void beforeChunk(Chunk<Object> chunk) {
         // No-op
     }
 
     @Override
-    public void afterChunk(ChunkContext context) {
-        StepExecution stepExecution = context.getStepContext().getStepExecution();
+    public void afterChunk(Chunk<Object> chunk) {
+        if (currentStepExecution == null) {
+            return;
+        }
 
-        long readDelta = stepExecution.getReadCount() - lastReadCount;
-        long writeDelta = stepExecution.getWriteCount() - lastWriteCount;
-        long skipDelta = stepExecution.getProcessSkipCount() - lastProcessSkipCount;
+        long readDelta = currentStepExecution.getReadCount() - lastReadCount;
+        long writeDelta = currentStepExecution.getWriteCount() - lastWriteCount;
+        long skipDelta = currentStepExecution.getProcessSkipCount() - lastProcessSkipCount;
 
         if (readDelta > 0) {
             meterRegistry.counter(
                     "batch.step.read",
-                    "step", stepExecution.getStepName()
+                    "step", currentStepExecution.getStepName()
             ).increment(readDelta);
         }
 
         if (writeDelta > 0) {
             meterRegistry.counter(
                     "batch.step.write",
-                    "step", stepExecution.getStepName()
+                    "step", currentStepExecution.getStepName()
             ).increment(writeDelta);
         }
 
         if (skipDelta > 0) {
             meterRegistry.counter(
                     "batch.step.skip",
-                    "step", stepExecution.getStepName()
+                    "step", currentStepExecution.getStepName()
             ).increment(skipDelta);
         }
 
-        lastReadCount = stepExecution.getReadCount();
-        lastWriteCount = stepExecution.getWriteCount();
-        lastProcessSkipCount = stepExecution.getProcessSkipCount();
+        lastReadCount = currentStepExecution.getReadCount();
+        lastWriteCount = currentStepExecution.getWriteCount();
+        lastProcessSkipCount = currentStepExecution.getProcessSkipCount();
     }
 
     @Override
-    public void afterChunkError(ChunkContext context) {
+    public void onChunkError(Exception exception, Chunk<Object> chunk) {
         // No-op
     }
 
