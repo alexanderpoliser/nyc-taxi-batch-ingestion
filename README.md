@@ -1,6 +1,6 @@
 # NYC Taxi Batch Ingestion
 
-Batch ingestion service that reads NYC taxi CSV data and loads it into Postgres using Spring Batch. It exposes HTTP endpoints to start, stop, and monitor the job, and publishes metrics via Micrometer/Prometheus.
+Batch ingestion service that reads [NYC Yellow Taxi](https://www.kaggle.com/datasets/elemento/nyc-yellow-taxi-trip-data)*) CSV data and loads it into Postgres using Spring Batch. It exposes HTTP endpoints to start, stop, and monitor the job, and publishes metrics via Micrometer/Prometheus.
 
 ## What it does
 - Reads `data/yellow_tripdata.csv` (configurable) in chunks
