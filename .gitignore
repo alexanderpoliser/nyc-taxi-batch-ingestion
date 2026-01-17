@@ -6,6 +6,8 @@ target/
 
 /data/
 
+.claude/
+
 ### STS ###
 .apt_generated
 .classpath
